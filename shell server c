@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    char command[100]; // Store the user's command
+    char output[1024]; // Store the output of the command
+
+    while (1) {
+        printf("Enter a command (or 'exit' to quit): ");
+        fgets(command, sizeof(command), stdin);
+
+        // Remove the newline character from the command
+        size_t len = strlen(command);
+        if (len > 0 && command[len - 1] == '\n') {
+            command[len - 1] = '\0';
+        }
+
+        if (strcmp(command, "exit") == 0) {
+            printf("Goodbye!\n");
+            break;
+        }
+
+        // Execute the command and capture the output
+        FILE *fp = popen(command, "r");
+        if (fp == NULL) {
+            perror("Error executing command");
+            continue;
+        }
+
+        // Read and display the output
+        while (fgets(output, sizeof(output), fp) != NULL) {
+            printf("Output: %s", output);
+        }
+
+        pclose(fp);
+    }
+
+    return 0;
+}
